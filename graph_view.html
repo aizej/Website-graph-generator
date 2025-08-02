@@ -1,0 +1,66 @@
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+
+<div id="link-graph" style="height: 600px; border: 1px solid #ccc;"></div>
+
+<script>
+  const container = document.getElementById('link-graph');
+
+  const options = {
+    layout: {
+      improvedLayout: true,
+      hierarchical: false
+    },
+    nodes: {
+      shape: 'dot',
+      size: 16,
+      font: { size: 17 },
+      color: { background: '#4caf50', border: '#388e3c', highlight: { background: '#81c784' } }
+    },
+    edges: {
+      arrows: 'to',
+      smooth: true
+    },
+    interaction: {
+      hover: true,
+      tooltipDelay: 100,
+      navigationButtons: true
+    },
+    physics: {
+      stabilization: true,
+      barnesHut: {
+        gravitationalConstant: -20000,
+        springLength: 100
+      }
+    }
+  };
+
+  fetch('/graph.json')  // adjust path if needed
+    .then(res => res.json())
+    .then(data => {
+      const nodes = new vis.DataSet(data.nodes);
+      const edges = new vis.DataSet(data.edges);
+      const network = new vis.Network(container, { nodes, edges }, options);
+
+      // Center around the "/" node
+      const rootNode = data.nodes.find(n => n.label === '/');
+      if (rootNode) {
+        setTimeout(() => {
+          network.focus(rootNode.id, {
+            scale: 1.2,
+            animation: {
+              duration: 1000,
+              easingFunction: "easeInOutQuad"
+            }
+          });
+        }, 500);
+      }
+
+      // Optional: Hide external nodes
+      // You could also style them differently
+      // Example: nodes with id starting with "external_" could be dimmed
+    })
+    .catch(err => {
+      container.innerHTML = '<p style="color:red;">Failed to load graph.json</p>';
+      console.error(err);
+    });
+</script>
